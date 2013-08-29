@@ -1,1 +1,10 @@
-Readme file
+JiraAutomation
+
+Python script used to automate creating/updating/deleting issues in Jira. Target is to minimize user's interaction so the script execution can be scheduled.
+
+Script is using jira-python package to access Jira. As the source of data are used CSV files.
+
+So far the script can create and delete issues, but the source CSV files need to have some specific fields, a.k.a hard-coding.
+To specify which field in Jira is which filed in CSV file, is used mapping file.Other properties, like Jira url, username, password, etc. are in dictionary in main.py script.
+
+This is my first attempt with Python !!!
