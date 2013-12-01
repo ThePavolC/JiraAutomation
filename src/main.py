@@ -3,10 +3,10 @@
 '''
 
 from CSV_module import CSV
+from Jira_module import Jira
 from Mapping_module import Mapping
 from jira.client import JIRA
 import os
-from Jira_module import Jira
 import datetime
 
 class Main(object):
@@ -25,23 +25,22 @@ class Main(object):
         self.password = properties['password']
         self.datetime_format = properties['datetime_format']
         self.backup_folder = properties['backup_folder']
+        self.resources_folder = properties['resources_folder']
     
     def get_Csv_module(self):
         """
         csv = [new, update, delete]
         """
         csv_init = CSV(self.csv_file_new, self.csv_file_delete, 
-                       self.csv_file_update)
+                       self.csv_file_update,self.resources_folder)
         return csv_init    
     
     def get_Mapping_module(self):
         """
         Get access to mapping file from path given in properties
         """
-        try :
-            mapping = Mapping(self.mapping_file)
-        except IOError :
-            return 0
+        mapping = Mapping(self.mapping_file,self.resources_folder)
+        
         return mapping
         
     def get_Jira(self):
@@ -54,14 +53,16 @@ class Main(object):
         jira = JIRA(options,basic_auth=(self.username,self.password))
         return jira
     
+    """
     def create_mapping_file_from_jira_metadata(self,jira_issue_metadata,
                                                header) :
-        """
-        Method create mapping file with all default fields from screen
-        and with custom fields which are also in header of CVS file.
-        Result file looks like this 
-        "key_from_CVS_file" : "key_from_Jira"
-        """
+        
+        #Method create mapping file with all default fields from screen
+        #and with custom fields which are also in header of CVS file.
+        #Result file looks like this 
+        #"key_from_CVS_file" : "key_from_Jira"
+        #"""
+    """    
         mapping_file = open('new.mapping','wb')
         mapping_file.write('# Unnecessary lines should be deleted.  \n')
         mapping_file.write('# Only custom fields have IDs.\n')
@@ -95,7 +96,7 @@ class Main(object):
             mapping_file.write('"')
             mapping_file.write('\n')
         mapping_file.close()
-    
+    """
     def move_to_backup(self,file):
         datetime_format = self.datetime_format
         file_sufix = datetime.datetime.now().strftime(datetime_format)
@@ -105,68 +106,62 @@ class Main(object):
     
 def main():
     properties = {
-                  'csv_file_new' : '../resources/NewMRsOnlyExport.csv',
-                  'csv_file_delete' : '../resources/DeletedMRsOnly.csv',
-                  'csv_file_update' : '../resources/UpdatedMRsOnly.csv',
-                   'mapping_file' : '../resources/new.mapping',
+                  'csv_file_new' : 'NewMRsOnlyExport.csv',
+                  'csv_file_delete' : 'DeletedMRsOnly.csv',
+                  'csv_file_update' : 'UpdatedMRsOnly.csv',
+                   'mapping_file' : 'new.mapping',
                   'server': 'http://localhost:2990/jira',
                   'username' : 'admin',
                   'password' : 'admin',
                   'datetime_format' : '%d-%m-%Y_%H-%M-%S',
-                  'backup_folder' : '../backup/'
+                  'backup_folder' : '../backup/',
+                  'resources_folder': '../resources/'
                   }
     #initialize priperties
     main = Main(properties)
     csv = main.get_Csv_module()
     mapping = main.get_Mapping_module()
     jira_module = Jira(main.get_Jira())
-
-    print 'All set'
     
     csv_action = {'new' : '',
                   'update' : '',
                   'delete' : ''
                   }
-    try :
-        csv_action['new'] = csv.get_new_csv()
-    except IOError :
-        csv_action['new'] = ''
-    try :
-        csv_action['update'] = csv.get_update_csv()
-    except IOError:
-        csv_action['update'] = ''
-    try :
-        csv_action['delete'] = csv.get_delete_csv()
-    except IOError:
-            csv_action['delete'] = ''
-    
+            
+    csv_action['new'] = csv.get_new_csv()
+    csv_action['update'] = csv.get_update_csv()
+    csv_action['delete'] = csv.get_delete_csv()
+
     print 'Actions'
     print 'Do -> ' + str(csv_action)
     
+    if mapping.get_mapping_file() == '':
+        print "Missing mapping file"
+        header = csv.get_header(csv_action['new'])
+        while( True ):
+            answer = raw_input('Create a new mapping file? [y/n]: ')
+            if (answer == 'y' or answer == 'n'):
+                if answer == 'y' :
+                    issue_key = raw_input('Key of mapping issue: ')
+                    meta =  main.get_Jira().editmeta(issue_key)
+                    mapping.creata_mapping_file(meta, header)
+                    #main.create_mapping_file_from_jira_metadata(meta, header)
+                    #os.rename('new.mapping',main.mapping_file)
+                    #mapping = Mapping(main.mapping_file)
+                    break
+                else :
+                    return
+    return
     if csv_action['new'] != '' :
         print 'Creating new issues'
         #get all data necessary for creating issue
         header = csv.get_header(csv_action['new'])
         data_dict = csv.get_csv_dictionary(csv_action['new'])
         
-        if mapping == 0:
-            print "Missing mapping file"
-            while( True ):
-                #answer = raw_input('Create a new mapping file? [y/n]: ')
-                answer = 'y'
-                if (answer == 'y' or answer == 'n'):
-                    if answer == 'y' :
-                        #issue_key = raw_input('Key of mapping issue: ')
-                        issue_key = 'PJ-2168'
-                        meta =  main.get_Jira().editmeta(issue_key)
-                        main.create_mapping_file_from_jira_metadata(meta, header)
-                        os.rename('new.mapping',main.mapping_file)
-                        mapping = Mapping(main.mapping_file)
-                        break
-                    else :
-                        return
         mapp = mapping.get_mapping_dictionary()
-        number_of_issues = data_dict['MR-ID']
+        
+        number_of_issues = data_dict['Summary']
+        
         m = 0
         #create data for one issue and then call create issue method on them
         for issue in number_of_issues:
@@ -174,10 +169,14 @@ def main():
             for i in header:
                 data[i] = data_dict[i][m]
             iss = jira_module.create_issue(header, data, mapp)
+            
             print 'Created Issue: ' + str(iss)
             m = m + 1
         print 'Creating new issues finished'
         main.move_to_backup(csv_action['new'])
+    
+    return
+    
     if csv_action['update'] != '' :
         main.move_to_backup(csv_action['update'])
         pass

@@ -4,19 +4,27 @@
 
 class Mapping(object):
     
-    def __init__(self,mapping_file_path):
+    def __init__(self,mapping_file,resources_folder):
         """
         Check if file exists and initialize path to mapping file
         """
-        with open(mapping_file_path):
-            pass
-        self.mapping_file_path = mapping_file_path
+        self.mapping_file = mapping_file
+        self.resources_folder = resources_folder
+        
+        try:
+            with open(resources_folder+mapping_file):
+                pass
+        except IOError:
+            self.mapping_file = ''
+    
+    def get_mapping_file(self):
+        return self.mapping_file
     
     def get_content_of_mapping_file(self):
         """
         Read mapping file line after line and then create list from them
         """
-        mapping_file = open(self.mapping_file_path,'r')
+        mapping_file = open(self.mapping_file,'r')
         mapping_content = [] 
         for line in mapping_file:
             if line.startswith('#'):
@@ -70,3 +78,44 @@ class Mapping(object):
             return 0
         else :
             return dictionary
+
+    def creata_mapping_file(self,jira_issue_metadata, header) :
+        """
+        Method create mapping file with all default fields from screen
+        and with custom fields which are also in header of CVS file.
+        Result file looks like this 
+        "key_from_CVS_file" : "key_from_Jira"
+        """
+        mapping_file = open('new.mapping','wb')
+        mapping_file.write('# Unnecessary lines should be deleted.  \n')
+        mapping_file.write('# Only custom fields have IDs.\n')
+        mapping_file.write('# Header key : Jira field ID : Jira field name\n')
+        meta = jira_issue_metadata
+        low_header = []
+        for h in header:
+            h.lower()
+            low_header.append(h)
+        for m in meta['fields']:
+            if 'customfield' in m:
+                field_name = meta['fields'][m]['name']
+                field_name.lower()
+                #if meta['fields'][m]['name'] in header:
+                if field_name in low_header:
+                    mapping_file.write('"')
+                    #mapping_file.write(meta['fields'][m]['name'])
+                    i = low_header.index(field_name)
+                    mapping_file.write(header[i])
+                    mapping_file.write('" : "')
+                    mapping_file.write(m)
+                    mapping_file.write('" : "')
+                    mapping_file.write(meta['fields'][m]['name'])
+                    mapping_file.write('"')
+                    mapping_file.write('\n')
+                    continue
+                else:
+                    continue
+            mapping_file.write('"" : "')
+            mapping_file.write(m)
+            mapping_file.write('"')
+            mapping_file.write('\n')
+        mapping_file.close()

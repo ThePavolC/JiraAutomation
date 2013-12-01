@@ -19,10 +19,13 @@ class Jira (object):
         :param issue_data: Data from CSV file as a dictionary. {'k1':'v1','k2':}
         :param mapping_data: Mapping dictionary.
         """
+        """
         issue_dict = {
                       'project' : {'key': 'CIA'},
                       'issuetype' : {'name' : 'New Feature'}
                       }
+        """
+        issue_dict = {}
         for i in header:
             m_key = i
             if m_key in mapping_data.keys():
@@ -38,6 +41,18 @@ class Jira (object):
                         continue
                 if m_value == 'reporter':
                     issue_dict[m_value] = {'name' : issue_data[i]}
+                    continue
+                if m_value == 'assignee':
+                    issue_dict[m_value] = {'name' : issue_data[i]}
+                    continue
+                if m_value == 'issuetype':
+                    issue_dict[m_value] = {'name' : issue_data[i]}
+                    continue
+                if m_value == 'project':
+                    issue_dict[m_value] = {'key' : issue_data[i]}
+                    continue
+                if m_value == 'priority':
+                    issue_dict[m_value] = {'id' : issue_data[i]}
                     continue
                 issue_dict[m_value] = issue_data[i]
         jira = self.get_Jira()

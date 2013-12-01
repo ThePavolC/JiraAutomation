@@ -3,31 +3,67 @@
 '''
 
 import csv
+import os
 
 class CSV(object):
-    def __init__(self,csv_new_file_path,csv_delete_file_path,
-                 csv_update_file_path):
+    def __init__(self,csv_new_file,csv_delete_file, csv_update_file,
+                 resources_folder):
         """
         Check if file exists and initialize path for CSV file
         """
-        self.csv_new_file_path = csv_new_file_path
-        self.csv_delete_file_path = csv_delete_file_path
-        self.csv_update_file_path = csv_update_file_path
+        self.csv_new_file = csv_new_file
+        self.csv_delete_file = csv_delete_file
+        self.csv_update_file = csv_update_file
+        self.resources_folder = resources_folder
+        self.delimiter = '\t'
+
+    def find_file(self,action_type):
+        """
+        Find file in current dir (src) that ends with .csv.
+        Then according to action find file that stars with new/update/delete.
+        Finding file name is not case sensitive. 
+        """
+        file_list =  os.listdir(self.resources_folder)
+        for f in file_list:
+            if f.endswith(".csv"):
+                low = f.lower()
+                if low.startswith(action_type):
+                    if action_type == 'new':
+                        self.csv_new_file = self.resources_folder + f
+                    if action_type == 'update':
+                        self.csv_update_file = self.resources_folder + f
+                    if action_type == 'delete':
+                        self.csv_delete_file = self.resources_folder + f
         
     def get_new_csv(self):
-        with open(self.csv_new_file_path):
-            pass
-        return self.csv_new_file_path
+        try:
+            with open(self.csv_new_file):
+                pass
+        except IOError:
+            self.csv_new_file = ''
+            self.find_file('new')
+            
+        return self.csv_new_file
     
     def get_update_csv(self):
-        with open(self.csv_update_file_path):
-            pass
-        return self.csv_update_file_path
+        try:
+            with open(self.csv_update_file):
+                pass
+        except IOError:
+            self.csv_update_file = ''
+            self.find_file('upadte')
+            
+        return self.csv_update_file
     
     def get_delete_csv(self):
-        with open(self.csv_delete_file_path):
-            pass
-        return self.csv_delete_file_path
+        try:
+            with open(self.csv_delete_file):
+                pass
+        except IOError:
+            self.csv_delete_file = ''
+            self.find_file('delete')
+            
+        return self.csv_delete_file
     
     def get_content(self, csv_file):
         """
@@ -35,7 +71,7 @@ class CSV(object):
         """
         content = []
         with open(csv_file, 'rb') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',')
+            reader = csv.reader(csvfile, delimiter=self.delimiter)
             for row in reader:
                 content.append(row)
         return content
@@ -46,7 +82,7 @@ class CSV(object):
         Method gets first line from CSV file, which is Header
         """
         with open(csv_file, 'rb') as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = csv.DictReader(csvfile, delimiter=self.delimiter)
             header = reader.fieldnames  
         return header
     
@@ -62,7 +98,9 @@ class CSV(object):
         So first element in each list, in whole dictionary is one line in CSV
         """
         content = self.get_content(csv_file)
+        
         header = self.get_header(csv_file)
+
         dictionary = {}
         for h in header:
             dictionary[h] = []
@@ -72,5 +110,6 @@ class CSV(object):
                 dictionary[str(header[i])].append(item)
                 i += 1
             i = 0
+        
         return dictionary
         
