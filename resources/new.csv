@@ -1,7 +1,7 @@
-Project	Issue Type	Summary	Priority	Note	Story	Description	Due Date	Assignee	Reporter	Environment	Original Estimate	Remaining Estimate	Lables
-Main Project	New Feature	Add issue to Jira	1	1	one of the main feature that needs to be done	add issue	11/Dec/13	admin	pavol.celuch	Linux	2w 3d 3h	1w	Test, JiraAutomation, Feature
-Main Project	New Feature	Remove issue from Jira	1	2	one of the main feature that needs to be done	remove issue	11/Dec/13	pavol.celuch	admin	Linux	1w 3d	7d	JiraAutomation, Testing
-Main Project	New Feature	Update issue in Jira	2	3	one of the main feature that needs to be done	update	11/Dec/13	admin	admin	Linux	1w 3d	12d	Lable1, Jira, Automation
-Main Project	Task	create csv for new issues	2	2	it is necessary to have some test data	new.csv	11/Dec/13	pavol.celuch	pavol.celuch	Universal	3h	1h	File, CSV
-Main Project	Task	create csv for update issues	3	2	needs some test data	update.csv	11/Dec/13	admin	admin	Universal	2h	2h	CSV, Action
-Main Project	Task	create csv for delete issues	2	1	test data	delete.csv	11/Dec/13	admin	pavol.celuch	Universal	1h	4h	CSV, Action
+Project	Issue Type	Summary	Priority	Note	Story	Description	Due Date	Assignee	Reporter	Environment	Labels
+Main Project	New Feature	Add issue to Jira	1	1	one of the main feature that needs to be done	add issue	11/Dec/13	admin	pavol.celuch	Linux	Test JiraAutomation Feature
+Main Project	New Feature	Remove issue from Jira	1	2	one of the main feature that needs to be done	remove issue	11/Dec/13	pavol.celuch	admin	Linux	JiraAutomation Testing
+Main Project	New Feature	Update issue in Jira	2	3	one of the main feature that needs to be done	update	11/Dec/13	admin	admin	Linux	Lable1 Jira Automation
+Main Project	Task	create csv for new issues	2	2	it is necessary to have some test data	new.csv	11/Dec/13	pavol.celuch	pavol.celuch	Universal	File CSV
+Main Project	Task	create csv for update issues	3	2	needs some test data	update.csv	11/Dec/13	admin	admin	Universal	CSV Action
+Main Project	Task	create csv for delete issues	2	1	test data	delete.csv	11/Dec/13	admin	pavol.celuch	Universal	CSV Acvtion
