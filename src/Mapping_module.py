@@ -8,23 +8,29 @@ class Mapping(object):
         """
         Check if file exists and initialize path to mapping file
         """
-        self.mapping_file = mapping_file
+        self.mapping_file_name = mapping_file
         self.resources_folder = resources_folder
         
         try:
             with open(resources_folder+mapping_file):
                 pass
         except IOError:
-            self.mapping_file = ''
+            self.mapping_file_name = ''
     
-    def get_mapping_file(self):
-        return self.mapping_file
+    def get_mapping_file_name(self):
+        return self.mapping_file_name
+    
+    def get_mapping_file_location(self):
+        map_file = str(self.get_mapping_file_name())
+        resources_folder = str(self.resources_folder)
+        return resources_folder+map_file
+        
     
     def get_content_of_mapping_file(self):
         """
         Read mapping file line after line and then create list from them
         """
-        mapping_file = open(self.mapping_file,'r')
+        mapping_file = open(self.get_mapping_file_location(),'r')
         mapping_content = [] 
         for line in mapping_file:
             if line.startswith('#'):
@@ -67,7 +73,7 @@ class Mapping(object):
                 """
                 if trun_h_field == '' or trun_j_id_field == '':
                     error = True
-                    print 'Error in mapping file ' + self.mapping_file_path
+                    print 'Error in mapping file ' + self.get_mapping_file_location()
                     print '-> ' + trun_h_field +' : '+ trun_j_id_field +' : '\
                                 + trun_j_name_field  
                 dictionary[trun_h_field] = { 
@@ -79,14 +85,19 @@ class Mapping(object):
         else :
             return dictionary
 
-    def creata_mapping_file(self,jira_issue_metadata, header) :
+    """
+    This one is not used because it puts to mapping file only those fields that
+    match on both sides, so are in file and in the jira.
+    I decided that better approach would be to have all fields from csv file.
+    """
+    def creata_mapping_file_old(self,jira_issue_metadata, header, file_name) :
         """
         Method create mapping file with all default fields from screen
         and with custom fields which are also in header of CVS file.
         Result file looks like this 
         "key_from_CVS_file" : "key_from_Jira"
         """
-        mapping_file = open('new.mapping','wb')
+        mapping_file = open(file_name,'wb')
         mapping_file.write('# Unnecessary lines should be deleted.  \n')
         mapping_file.write('# Only custom fields have IDs.\n')
         mapping_file.write('# Header key : Jira field ID : Jira field name\n')
@@ -118,4 +129,41 @@ class Mapping(object):
             mapping_file.write(m)
             mapping_file.write('"')
             mapping_file.write('\n')
+        mapping_file.close()
+        
+    def creata_mapping_file(self,jira_issue_metadata, header, file_name) :
+        """
+        Method creates mapping file with ALL fields from csv file and tries to
+        find same fields in jira and match them.
+        Result file looks like this 
+        "key_from_CVS_file" : "key_from_Jira" : "<customfiled_name>"
+        """
+        mapping_file = open(file_name,'wb')
+        mapping_file.write('# Unnecessary lines should be deleted.  \n')
+        mapping_file.write('# Only custom fields have IDs.\n')
+        mapping_file.write('# Header key : Jira field ID : Jira field name\n')
+        meta = jira_issue_metadata
+
+        for h in header:
+            mapping_file.write('"')
+            mapping_file.write(h)
+            mapping_file.write('" : "')
+            
+            for m in meta['fields']:
+                
+                if str(m).startswith('customfield'):
+                    field_name = meta['fields'][m]['name']
+                    h_noWhiteSpace = str(h).replace(' ','')
+                    if h_noWhiteSpace.lower() == field_name.lower():
+                        mapping_file.write(m)
+                        mapping_file.write('" : "')
+                        mapping_file.write(meta['fields'][m]['name'])
+                else:
+                    field_name = m
+                    h_noWhiteSpace = str(h).replace(' ','')
+                    if h_noWhiteSpace.lower() == field_name.lower():
+                        mapping_file.write(m)
+            mapping_file.write('"')
+            mapping_file.write('\n')
+        
         mapping_file.close()
